@@ -27,12 +27,15 @@ var player;
 var enemy_dornier;
 var cursors;
 var bullets;
+var enemy_bullets;
 var bullet_speed = -300;
 var fireRate = 100;
 var nextFire = 0;
+var enemyNextFire = 0;
 var fire;
 var hit;
 var temperature = 0;
+var burst = 0;
 
 // -- PRELOAD FUNCTION -- //
 
@@ -120,6 +123,10 @@ function create() {
     defaultKey: "bullet_0",
     maxSize: 20,
   });
+  enemy_bullets = this.physics.add.group({
+    defaultKey: "bullet_0",
+    maxSize: 20,
+  });
 
   this.anims.create({
     key: "smoke",
@@ -157,6 +164,12 @@ function create() {
     hit.y = bullet.y + 10;
     hit.play("bullet_hit");
   }
+
+  setInterval(() => {
+    if (temperature > 0) {
+      temperature -= 100;
+    }
+  }, 500);
 }
 
 // -- UPDATE FUNCTION -- //
@@ -208,12 +221,38 @@ function update(time, delta) {
     }
     enemy_dornier.setVelocityX(+enemy_dornier.speed); // Move right
   }
+
+   if (time > enemyNextFire && burst < 5) {
+      var enemy_bullet = enemy_bullets.get(enemy_dornier.x, enemy_dornier.y - 40);
+      if (enemy_bullet) {
+        enemy_bullet.setActive(true);
+        enemy_bullet.setVisible(true);
+        enemy_bullet.setVelocityY(-bullet_speed);
+        enemy_bullet.setScale(1.5);
+        enemy_bullet.setAngle(180);
+        enemy_bullet.setDepth(3);
+        enemy_bullet.body.setSize(5, 5);
+        enemy_bullet.body.setOffset(14, 14);
+        enemyNextFire = time + fireRate;
+        enemy_bullet.play("smoke");
+
+      }
+      burst++;
+      if (burst === 5) {
+        setTimeout(() => {
+          burst = 0;
+        },1000)
+      }
+    }
+    enemy_bullets.getChildren().forEach(function (enemy_bullet) {
+    if (
+      enemy_bullet.active &&
+      (enemy_bullet.x < 0 || enemy_bullet.x > 600 || enemy_bullet.y < 0 || enemy_bullet.y > 800)
+    ) {
+      enemy_bullet.setActive(false);
+      enemy_bullet.setVisible(false);
+    }
+  });
 }
 
 // -- HELPER FUNCTIONS -- //
-
-setInterval(() => {
-  if (temperature > 0) {
-    temperature -= 100;
-  }
-}, 500);
