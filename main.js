@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.1.3-dev",
+  version: "1.1.4-dev",
 };
 
 // -- GLOBAL VARIABLES -- //
@@ -31,6 +31,7 @@ var bullet_speed = -300;
 var fireRate = 100;
 var nextFire = 0;
 var fire;
+var hit;
 var temperature = 0;
 
 // -- PRELOAD FUNCTION -- //
@@ -51,6 +52,9 @@ function preload() {
   this.load.image("enemy_frame0", "assets/enemy_dornier/enemy_dornier0.png");
   this.load.image("enemy_frame1", "assets/enemy_dornier/enemy_dornier1.png");
   this.load.image("enemy_frame2", "assets/enemy_dornier/enemy_dornier2.png");
+
+  this.load.image("hit", "assets/hit/hit_0.png");
+  this.load.image("nohit", "assets/hit/hit_1.png");
 }
 
 // -- CREATE FUNCTION -- //
@@ -83,6 +87,9 @@ function create() {
   fire = this.physics.add.sprite(player.x, player.y - 40, "nofire");
   fire.setDrag(500, 500);
   fire.setDepth(4);
+
+  hit = this.physics.add.sprite(300, 300, "nohit");
+  hit.setDepth(4);
 
   this.anims.create({
     key: "fly",
@@ -128,12 +135,28 @@ function create() {
     repeat: 0,
   });
 
+  this.anims.create({
+    key: "bullet_hit",
+    frames: [{ key: "hit" }, { key: "nohit" }],
+    frameRate: 40,
+    repeat: 0,
+  });
+
   player.setCollideWorldBounds(true);
   enemy_dornier.setCollideWorldBounds(true);
   // fire.setCollideWorldBounds(true);
   this.physics.add.overlap(enemy_dornier, bullets, hitEnemy, null, this);
   cursors = this.input.keyboard.createCursorKeys();
   enemy_dornier.setVelocityX(+enemy_dornier.speed);
+
+  function hitEnemy(enemy, bullet) {
+    bullet.setActive(false);
+    bullet.setVisible(false);
+
+    hit.x = bullet.x;
+    hit.y = bullet.y + 10;
+    hit.play("bullet_hit");
+  }
 }
 
 // -- UPDATE FUNCTION -- //
@@ -189,14 +212,8 @@ function update(time, delta) {
 
 // -- HELPER FUNCTIONS -- //
 
-function hitEnemy(enemy, hit) {
-  hit.setActive(false);
-  hit.setVisible(false);
-}
-
 setInterval(() => {
   if (temperature > 0) {
     temperature -= 100;
   }
 }, 500);
-// try to write a function that measures overheating
