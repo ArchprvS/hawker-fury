@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.1.4-dev",
+  version: "1.2.1-dev",
 };
 
 // -- GLOBAL VARIABLES -- //
@@ -34,6 +34,7 @@ var nextFire = 0;
 var enemyNextFire = 0;
 var fire;
 var hit;
+var player_hit;
 var temperature = 0;
 var burst = 0;
 
@@ -74,6 +75,7 @@ function create() {
 
   player = this.physics.add.sprite(300, 720, "player_frame0").setScale(1.5);
   player.setOrigin(0.5, 0.5);
+  player.body.setSize(50, 25, 0);
   player.speed = 200;
   player.setDrag(500, 500);
   player.setDepth(2);
@@ -91,8 +93,20 @@ function create() {
   fire.setDrag(500, 500);
   fire.setDepth(4);
 
+  enemy_fire = this.physics.add.sprite(
+    enemy_dornier.x,
+    enemy_dornier.y - 40,
+    "fire"
+  );
+  enemy_fire.setDrag(30, 30);
+  enemy_fire.setDepth(4);
+  enemy_fire.setAngle(180);
+
   hit = this.physics.add.sprite(300, 300, "nohit");
   hit.setDepth(4);
+
+  player_hit = this.physics.add.sprite(300, 700, "nohit");
+  player_hit.setDepth(4);
 
   this.anims.create({
     key: "fly",
@@ -152,17 +166,25 @@ function create() {
   player.setCollideWorldBounds(true);
   enemy_dornier.setCollideWorldBounds(true);
   // fire.setCollideWorldBounds(true);
-  this.physics.add.overlap(enemy_dornier, bullets, hitEnemy, null, this);
+  this.physics.add.overlap(enemy_dornier, bullets, hitPlane, null, this);
+  this.physics.add.overlap(player, enemy_bullets, hitPlane, null, this);
   cursors = this.input.keyboard.createCursorKeys();
   enemy_dornier.setVelocityX(+enemy_dornier.speed);
 
-  function hitEnemy(enemy, bullet) {
+  function hitPlane(plane, bullet) {
+
+    if (plane === enemy_dornier) {
+      hit.x = bullet.x;
+      hit.y = bullet.y + 10;
+      hit.play("bullet_hit");
+    }
+    else if (plane === player) {
+      player_hit.x = bullet.x;
+      player_hit.y = bullet.y + 10;
+      player_hit.play("bullet_hit");
+    }
     bullet.setActive(false);
     bullet.setVisible(false);
-
-    hit.x = bullet.x;
-    hit.y = bullet.y + 10;
-    hit.play("bullet_hit");
   }
 
   setInterval(() => {
@@ -184,19 +206,16 @@ function update(time, delta) {
   fire.x = player.x;
   fire.y = player.y - 40;
 
+  enemy_fire.x = enemy_dornier.x - 4;
+  enemy_fire.y = enemy_dornier.y - 25;
+
   if (cursors.space.isDown) {
     if (time > nextFire && temperature < 500) {
       var bullet = bullets.get(player.x, player.y - 40);
       if (bullet) {
-        bullet.setActive(true);
-        bullet.setVisible(true);
+        shoot(bullet);
         bullet.setVelocityY(bullet_speed);
-        bullet.setScale(1.5);
-        bullet.setDepth(3);
-        bullet.body.setSize(5, 5);
-        bullet.body.setOffset(14, 14);
         nextFire = time + fireRate;
-        bullet.play("smoke");
         fire.play("gunfire");
         temperature += 50;
       }
@@ -222,32 +241,32 @@ function update(time, delta) {
     enemy_dornier.setVelocityX(+enemy_dornier.speed); // Move right
   }
 
-   if (time > enemyNextFire && burst < 5) {
-      var enemy_bullet = enemy_bullets.get(enemy_dornier.x, enemy_dornier.y - 40);
-      if (enemy_bullet) {
-        enemy_bullet.setActive(true);
-        enemy_bullet.setVisible(true);
-        enemy_bullet.setVelocityY(-bullet_speed);
-        enemy_bullet.setScale(1.5);
-        enemy_bullet.setAngle(180);
-        enemy_bullet.setDepth(3);
-        enemy_bullet.body.setSize(5, 5);
-        enemy_bullet.body.setOffset(14, 14);
-        enemyNextFire = time + fireRate;
-        enemy_bullet.play("smoke");
-
-      }
-      burst++;
-      if (burst === 5) {
-        setTimeout(() => {
-          burst = 0;
-        },1000)
-      }
+  if (time > enemyNextFire && burst < 6) {
+    var enemy_bullet = enemy_bullets.get(
+      enemy_dornier.x - 5,
+      enemy_dornier.y - 15
+    );
+    if (enemy_bullet) {
+      shoot(enemy_bullet);
+      enemy_bullet.setAngle(180);
+      enemy_bullet.setVelocityY(-bullet_speed);
+      enemyNextFire = time + fireRate;
+      enemy_fire.play("gunfire");
     }
-    enemy_bullets.getChildren().forEach(function (enemy_bullet) {
+    burst++;
+    if (burst === 6) {
+      setTimeout(() => {
+        burst = 0;
+      }, 1000);
+    }
+  }
+  enemy_bullets.getChildren().forEach(function (enemy_bullet) {
     if (
       enemy_bullet.active &&
-      (enemy_bullet.x < 0 || enemy_bullet.x > 600 || enemy_bullet.y < 0 || enemy_bullet.y > 800)
+      (enemy_bullet.x < 0 ||
+        enemy_bullet.x > 600 ||
+        enemy_bullet.y < 0 ||
+        enemy_bullet.y > 800)
     ) {
       enemy_bullet.setActive(false);
       enemy_bullet.setVisible(false);
@@ -256,3 +275,13 @@ function update(time, delta) {
 }
 
 // -- HELPER FUNCTIONS -- //
+
+function shoot(bull) {
+  bull.setActive(true);
+  bull.setVisible(true);
+  bull.setScale(1.5);
+  bull.setDepth(3);
+  bull.body.setSize(5, 5);
+  bull.body.setOffset(14, 14);
+  bull.play("smoke");
+}
