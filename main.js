@@ -19,26 +19,27 @@ var config = {
   version: "1.2.1-dev",
 };
 
-// -- GLOBAL VARIABLES -- //
+// ---------- GLOBAL VARIABLES ---------- //
 
-var game = new Phaser.Game(config);
-var background;
-var player;
-var enemy_dornier;
-var cursors;
-var bullets;
-var enemy_bullets;
-var bullet_speed = -300;
-var fireRate = 100;
-var nextFire = 0;
-var enemyNextFire = 0;
-var fire;
-var hit;
-var player_hit;
-var temperature = 0;
-var burst = 0;
+const game = new Phaser.Game(config);
+let background;
+let player;
+let enemy_dornier;
+let cursors;
+let bullets;
+let enemy_bullets;
+let bullet_speed = -300;
+let fireRate = 100;
+let nextFire = 0;
+let enemyNextFire = 0;
+let fire;
+let hit;
+let player_hit;
+let temperature = 0;
+let burst = 0;
+let player_damage = 0;
 
-// -- PRELOAD FUNCTION -- //
+// ---------- PRELOAD FUNCTION ---------- //
 
 function preload() {
   this.load.image("bground", "assets/bground.jpg");
@@ -61,15 +62,22 @@ function preload() {
   this.load.image("nohit", "assets/hit/hit_1.png");
 }
 
-// -- CREATE FUNCTION -- //
+// ---------- CREATE FUNCTION ---------- //
 
 function create() {
+
   this.add
     .text(10, 10, `Version: ${config.version}`, {
       fontSize: "16px",
       color: "#ffffff",
     })
     .setDepth(3);
+  const damage_ind = this.add.text(10, 770, `Damage ${player_damage}%`, {
+    fontSize: "20px",
+    color: "#2a2a2a",
+  });
+  damage_ind.setDepth(3);
+
   background = this.add.image(300, 400, "bground");
   background.setDepth(0);
 
@@ -165,7 +173,6 @@ function create() {
 
   player.setCollideWorldBounds(true);
   enemy_dornier.setCollideWorldBounds(true);
-  // fire.setCollideWorldBounds(true);
   this.physics.add.overlap(enemy_dornier, bullets, hitPlane, null, this);
   this.physics.add.overlap(player, enemy_bullets, hitPlane, null, this);
   cursors = this.input.keyboard.createCursorKeys();
@@ -182,6 +189,8 @@ function create() {
       player_hit.x = bullet.x;
       player_hit.y = bullet.y + 10;
       player_hit.play("bullet_hit");
+      damage_ind.setText(`Damage ${player_damage}%`);
+      player_damage += 1.75;
     }
     bullet.setActive(false);
     bullet.setVisible(false);
@@ -194,7 +203,7 @@ function create() {
   }, 500);
 }
 
-// -- UPDATE FUNCTION -- //
+// ---------- UPDATE FUNCTION ---------- //
 
 function update(time, delta) {
   if (cursors.left.isDown) {
@@ -274,7 +283,7 @@ function update(time, delta) {
   });
 }
 
-// -- HELPER FUNCTIONS -- //
+// ---------- HELPER FUNCTIONS ---------- //
 
 function shoot(bull) {
   bull.setActive(true);
