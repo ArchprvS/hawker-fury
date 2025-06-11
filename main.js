@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.1-dev",
+  version: "1.2.3-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -38,6 +38,8 @@ let player_hit;
 let temperature = 0;
 let burst = 0;
 let player_damage = 0;
+let enemy_damage = 0;
+let damage_ind;
 
 // ---------- PRELOAD FUNCTION ---------- //
 
@@ -72,7 +74,7 @@ function create() {
       color: "#ffffff",
     })
     .setDepth(3);
-  const damage_ind = this.add.text(10, 770, `Damage ${player_damage}%`, {
+  damage_ind = this.add.text(10, 770, `Damage ${player_damage}%`, {
     fontSize: "20px",
     color: "#2a2a2a",
   });
@@ -184,6 +186,8 @@ function create() {
       hit.x = bullet.x;
       hit.y = bullet.y + 10;
       hit.play("bullet_hit");
+      enemy_damage += 0.25;
+      console.log(enemy_damage)
     }
     else if (plane === player) {
       player_hit.x = bullet.x;
@@ -281,6 +285,17 @@ function update(time, delta) {
       enemy_bullet.setVisible(false);
     }
   });
+  if (player_damage > 100 || enemy_damage > 200) {
+    if (player_damage > 100) {
+      player_damage = 0;
+    }
+    enemy_damage = 0;
+    player.x = 300;
+    player.y = 720;
+    enemy_dornier.x = 300;
+    enemy_dornier.y = 300;
+    damage_ind.setText(`Damage ${player_damage}%`);
+  }
 }
 
 // ---------- HELPER FUNCTIONS ---------- //
