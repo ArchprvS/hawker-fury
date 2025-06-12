@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.3-dev",
+  version: "1.2.4-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -40,6 +40,7 @@ let burst = 0;
 let player_damage = 0;
 let enemy_damage = 0;
 let damage_ind;
+let game_paused = false;
 
 // ---------- PRELOAD FUNCTION ---------- //
 
@@ -68,12 +69,27 @@ function preload() {
 
 function create() {
 
+    const scene = this;
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (game_paused) {
+                scene.scene.resume();
+                game_paused = false;
+            } else {
+                scene.scene.pause();
+                game_paused = true;
+            }
+        }
+    });
+
+
   this.add
     .text(10, 10, `Version: ${config.version}`, {
       fontSize: "16px",
       color: "#ffffff",
     })
     .setDepth(3);
+
   damage_ind = this.add.text(10, 770, `Damage ${player_damage}%`, {
     fontSize: "20px",
     color: "#2a2a2a",
@@ -181,15 +197,13 @@ function create() {
   enemy_dornier.setVelocityX(+enemy_dornier.speed);
 
   function hitPlane(plane, bullet) {
-
     if (plane === enemy_dornier) {
       hit.x = bullet.x;
       hit.y = bullet.y + 10;
       hit.play("bullet_hit");
       enemy_damage += 0.25;
-      console.log(enemy_damage)
-    }
-    else if (plane === player) {
+      console.log(enemy_damage);
+    } else if (plane === player) {
       player_hit.x = bullet.x;
       player_hit.y = bullet.y + 10;
       player_hit.play("bullet_hit");
@@ -210,6 +224,8 @@ function create() {
 // ---------- UPDATE FUNCTION ---------- //
 
 function update(time, delta) {
+  const scene = this;
+
   if (cursors.left.isDown) {
     player.setVelocityX(-player.speed);
   } else if (cursors.right.isDown) {
@@ -234,6 +250,7 @@ function update(time, delta) {
       }
     }
   }
+
   bullets.getChildren().forEach(function (bullet) {
     if (
       bullet.active &&
@@ -259,6 +276,7 @@ function update(time, delta) {
       enemy_dornier.x - 5,
       enemy_dornier.y - 15
     );
+
     if (enemy_bullet) {
       shoot(enemy_bullet);
       enemy_bullet.setAngle(180);
@@ -267,12 +285,14 @@ function update(time, delta) {
       enemy_fire.play("gunfire");
     }
     burst++;
+
     if (burst === 6) {
       setTimeout(() => {
         burst = 0;
       }, 1000);
     }
   }
+
   enemy_bullets.getChildren().forEach(function (enemy_bullet) {
     if (
       enemy_bullet.active &&
@@ -285,16 +305,16 @@ function update(time, delta) {
       enemy_bullet.setVisible(false);
     }
   });
+
   if (player_damage > 100 || enemy_damage > 200) {
     if (player_damage > 100) {
+      scene.scene.pause();
       player_damage = 0;
     }
-    enemy_damage = 0;
-    player.x = 300;
-    player.y = 720;
-    enemy_dornier.x = 300;
-    enemy_dornier.y = 300;
-    damage_ind.setText(`Damage ${player_damage}%`);
+
+    setTimeout(() => {
+      resetScene(scene);
+    }, 1000);
   }
 }
 
@@ -308,4 +328,32 @@ function shoot(bull) {
   bull.body.setSize(5, 5);
   bull.body.setOffset(14, 14);
   bull.play("smoke");
+}
+
+function resetScene(scene) {
+  enemy_damage = 0;
+
+  player.x = 300;
+  player.y = 720;
+
+  enemy_dornier.x = 300;
+  enemy_dornier.y = 300;
+  enemy_dornier.setVelocityX(+enemy_dornier.speed);
+
+  damage_ind.setText(`Damage ${player_damage}%`);
+
+  bullets.getChildren().forEach((bullet) => {
+    if (bullet.active) {
+      bullet.setActive(false);
+      bullet.setVisible(false);
+    }
+  });
+  enemy_bullets.getChildren().forEach(function (bullet) {
+    if (bullet.active) {
+      bullet.setActive(false);
+      bullet.setVisible(false);
+    }
+  });
+
+  scene.scene.resume();
 }
