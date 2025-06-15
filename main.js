@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.4-dev",
+  version: "1.2.5-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -41,11 +41,17 @@ let player_damage = 0;
 let enemy_damage = 0;
 let damage_ind;
 let game_paused = false;
+let goverpic;
+let pausepic;
 
 // ---------- PRELOAD FUNCTION ---------- //
 
 function preload() {
   this.load.image("bground", "assets/bground.jpg");
+  this.load.image("goverpic", "assets/game_over.png");
+  this.load.image("pausepic", "assets/pause.png");
+
+  this.load.image("esc_0", "assets/escbutton/esc_0.png");
 
   this.load.image("bullet_0", "assets/player_bullet/bullet_0.png");
   this.load.image("bullet_1", "assets/player_bullet/bullet_1.png");
@@ -68,36 +74,48 @@ function preload() {
 // ---------- CREATE FUNCTION ---------- //
 
 function create() {
+  background = this.add.image(300, 400, "bground");
+  background.setDepth(0);
 
-    const scene = this;
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            if (game_paused) {
-                scene.scene.resume();
-                game_paused = false;
-            } else {
-                scene.scene.pause();
-                game_paused = true;
-            }
-        }
-    });
+  goverpic = this.add.image(300, 400, "goverpic");
+  goverpic.setDepth(-1);
 
+  pausepic = this.add.image(300, 400, "pausepic");
+  pausepic.setDepth(-1);
+  const escimg = this.add.image(250, 470, "esc_0");
+  escimg.setDepth(-1);
+
+  const scene = this;
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      if (game_paused) {
+        scene.scene.resume();
+        game_paused = false;
+        pausepic.setDepth(-1);
+        escimg.setDepth(-1)
+      } else {
+        scene.scene.pause();
+        game_paused = true;
+        pausepic.setDepth(5);
+        escimg.setDepth(5);
+      }
+    }
+  });
 
   this.add
     .text(10, 10, `Version: ${config.version}`, {
-      fontSize: "16px",
+      fontFamily: "PressStart2P-Regular",
+      fontSize: "14px",
       color: "#ffffff",
     })
     .setDepth(3);
 
   damage_ind = this.add.text(10, 770, `Damage ${player_damage}%`, {
+    fontFamily: "PressStart2P-Regular",
     fontSize: "20px",
     color: "#2a2a2a",
   });
   damage_ind.setDepth(3);
-
-  background = this.add.image(300, 400, "bground");
-  background.setDepth(0);
 
   player = this.physics.add.sprite(300, 720, "player_frame0").setScale(1.5);
   player.setOrigin(0.5, 0.5);
@@ -289,7 +307,7 @@ function update(time, delta) {
     if (burst === 6) {
       setTimeout(() => {
         burst = 0;
-      }, 1000);
+      }, 500);
     }
   }
 
@@ -310,11 +328,12 @@ function update(time, delta) {
     if (player_damage > 100) {
       scene.scene.pause();
       player_damage = 0;
+      goverpic.setDepth(5);
     }
 
     setTimeout(() => {
       resetScene(scene);
-    }, 1000);
+    }, 1500);
   }
 }
 
@@ -337,10 +356,11 @@ function resetScene(scene) {
   player.y = 720;
 
   enemy_dornier.x = 300;
-  enemy_dornier.y = 300;
+  enemy_dornier.y = 200;
   enemy_dornier.setVelocityX(+enemy_dornier.speed);
 
   damage_ind.setText(`Damage ${player_damage}%`);
+  goverpic.setDepth(-1);
 
   bullets.getChildren().forEach((bullet) => {
     if (bullet.active) {
