@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.5-dev",
+  version: "1.2.6-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
