@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.6-dev",
+  version: "1.2.7-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -41,12 +41,21 @@ let player_damage = 0;
 let enemy_damage = 0;
 let damage_ind;
 let game_paused = false;
+let startscreen;
 let goverpic;
 let pausepic;
 
 // ---------- PRELOAD FUNCTION ---------- //
 
 function preload() {
+  this.load.image("stscreen", "assets/startingscreen.png");
+  this.load.spritesheet('enter_button', 'assets/enter_button.png',
+    {
+      frameWidth: 50,
+      frameHeight: 50
+    }
+  )
+
   this.load.image("bground", "assets/bground.jpg");
   this.load.image("goverpic", "assets/game_over.png");
   this.load.image("pausepic", "assets/pause.png");
@@ -75,7 +84,22 @@ function preload() {
 
 function create() {
   background = this.add.image(300, 400, "bground");
-  background.setDepth(0);
+  background.setDepth(5);
+
+  startscreen = this.add.image(300, 400, "stscreen");
+  startscreen.setDepth(5);
+  this.anims.create({
+    key: 'enter-anim',
+    frames: this.anims.generateFrameNumbers('enter_button', {
+      start: 0,
+      end: 3,
+    }),
+    frameRate: 8,
+    repeat: -1
+  });
+  const enterButton = this.add.sprite(270, 420, 'enter-button');
+  enterButton.play('enter-anim');
+  enterButton.setDepth(5);
 
   goverpic = this.add.image(300, 400, "goverpic");
   goverpic.setDepth(-1);
@@ -116,6 +140,14 @@ function create() {
     color: "#2a2a2a",
   });
   damage_ind.setDepth(3);
+
+    document.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      startscreen.setDepth(-1);
+      enterButton.setDepth(-1);
+      background.setDepth(0);
+    }
+  })
 
   player = this.physics.add.sprite(300, 720, "player_frame0").setScale(1.5);
   player.setOrigin(0.5, 0.5);
