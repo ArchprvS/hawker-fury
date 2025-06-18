@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.8-dev",
+  version: "1.2.9-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -44,6 +44,8 @@ let game_paused = false;
 let startscreen;
 let goverpic;
 let pausepic;
+let cloud_0;
+let cloud_1;
 
 // ---------- PRELOAD FUNCTION ---------- //
 
@@ -59,6 +61,9 @@ function preload() {
   this.load.image("bground", "assets/bground.jpg");
   this.load.image("goverpic", "assets/game_over.png");
   this.load.image("pausepic", "assets/pause.png");
+
+  this.load.image("cloud_0", "assets/cloud_0.png");
+  this.load.image("cloud_1", "assets/cloud_1.png");
 
   this.load.image("esc_0", "assets/escbutton/esc_0.png");
 
@@ -104,6 +109,11 @@ function create() {
   goverpic = this.add.image(300, 400, "goverpic");
   goverpic.setDepth(-1);
 
+  cloud_0 = this.physics.add.sprite(150, 600, "cloud_0");
+  cloud_1 = this.physics.add.sprite(480, 200, "cloud_1");
+  cloud_0.setDepth(2);
+  cloud_1.setDepth(2);
+
   pausepic = this.add.image(300, 400, "pausepic");
   pausepic.setDepth(-1);
   const escimg = this.add.image(250, 470, "esc_0");
@@ -116,7 +126,7 @@ function create() {
         scene.scene.resume();
         game_paused = false;
         pausepic.setDepth(-1);
-        escimg.setDepth(-1)
+        escimg.setDepth(-1);
       } else {
         scene.scene.pause();
         game_paused = true;
@@ -275,6 +285,15 @@ function create() {
 
 function update(time, delta) {
   const scene = this;
+
+  cloud_0.setVelocityY(100);
+  cloud_1.setVelocityY(120);
+  if (cloud_0.y > 900) {
+    cloud_0.y = -100
+  }
+  if (cloud_1.y > 900) {
+    cloud_1.y = -100
+  }
 
   if (cursors.left.isDown) {
     player.setVelocityX(-player.speed);
