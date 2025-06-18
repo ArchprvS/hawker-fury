@@ -16,7 +16,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.7-dev",
+  version: "1.2.8-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -97,7 +97,7 @@ function create() {
     frameRate: 8,
     repeat: -1
   });
-  const enterButton = this.add.sprite(270, 420, 'enter-button');
+  const enterButton = this.add.sprite(268, 415, 'enter-button');
   enterButton.play('enter-anim');
   enterButton.setDepth(5);
 
