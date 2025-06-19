@@ -52,6 +52,9 @@ let cloud_1;
 // ---------- PRELOAD FUNCTION ---------- //
 
 function preload() {
+
+  this.load.font('PressStart', 'assets/PressStart2P-Regular.ttf', 'truetype');
+
   this.load.image("stscreen", "assets/startingscreen.png");
   this.load.spritesheet('enter_button', 'assets/enter_button.png',
     {
@@ -146,14 +149,14 @@ function create() {
 
   this.add
     .text(10, 10, `Version: ${config.version}`, {
-      fontFamily: "PressStart2P-Regular",
       fontSize: "14px",
       color: "#ffffff",
+      fontFamily: 'PressStart',
     })
     .setDepth(3);
 
   damage_ind = this.add.text(10, 770, `Damage ${player_damage}%`, {
-    fontFamily: "PressStart2P-Regular",
+    fontFamily: "PressStart",
     fontSize: "20px",
     color: "#2a2a2a",
   });
@@ -294,8 +297,8 @@ function create() {
 function update(time, delta) {
   const scene = this;
 
-  cloud_0.setVelocityY(100);
-  cloud_1.setVelocityY(100);
+  cloud_0.setVelocityY(150);
+  cloud_1.setVelocityY(150);
   cloud_upper_0.setVelocityY(200);
   cloud_upper_1.setVelocityY(200);
   if (cloud_0.y > 1200) {
