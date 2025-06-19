@@ -13,10 +13,12 @@ var config = {
     default: "arcade", // Typ fizyki
     arcade: {
       gravity: { y: 0 }, // Brak grawitacji dla widoku z góry
+      skipQuadTree: false,
+      fps: 60,
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.2.9-dev",
+  version: "1.3.0-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -58,12 +60,12 @@ function preload() {
     }
   )
 
-  this.load.image("bground", "assets/bground.jpg");
+  this.load.image("bground", "assets/background.png");
   this.load.image("goverpic", "assets/game_over.png");
   this.load.image("pausepic", "assets/pause.png");
 
-  this.load.image("cloud_0", "assets/cloud_0.png");
-  this.load.image("cloud_1", "assets/cloud_1.png");
+  this.load.image("cloud_upper_0", "assets/cloud_0.png");
+  this.load.image("cloud_0", "assets/cloud_upper_0.png");
 
   this.load.image("esc_0", "assets/escbutton/esc_0.png");
 
@@ -89,10 +91,10 @@ function preload() {
 
 function create() {
   background = this.add.image(300, 400, "bground");
-  background.setDepth(5);
+  background.setDepth(6);
 
   startscreen = this.add.image(300, 400, "stscreen");
-  startscreen.setDepth(5);
+  startscreen.setDepth(6);
   this.anims.create({
     key: 'enter-anim',
     frames: this.anims.generateFrameNumbers('enter_button', {
@@ -104,15 +106,21 @@ function create() {
   });
   const enterButton = this.add.sprite(268, 415, 'enter-button');
   enterButton.play('enter-anim');
-  enterButton.setDepth(5);
+  enterButton.setDepth(6);
 
   goverpic = this.add.image(300, 400, "goverpic");
   goverpic.setDepth(-1);
 
-  cloud_0 = this.physics.add.sprite(150, 600, "cloud_0");
-  cloud_1 = this.physics.add.sprite(480, 200, "cloud_1");
+  cloud_0 = this.physics.add.sprite(300, 400, "cloud_0");
+  cloud_1 = this.physics.add.sprite(300, 1200, "cloud_0");
+  cloud_upper_0 = this.physics.add.sprite(300, 400, "cloud_upper_0")
+  cloud_upper_1 = this.physics.add.sprite(300, 1200, "cloud_upper_0")
+  // cloud_upper_0 = this.physics.add.sprite()
   cloud_0.setDepth(2);
   cloud_1.setDepth(2);
+  cloud_upper_0.setDepth(5);
+  cloud_upper_1.setDepth(5);
+
 
   pausepic = this.add.image(300, 400, "pausepic");
   pausepic.setDepth(-1);
@@ -130,8 +138,8 @@ function create() {
       } else {
         scene.scene.pause();
         game_paused = true;
-        pausepic.setDepth(5);
-        escimg.setDepth(5);
+        pausepic.setDepth(6);
+        escimg.setDepth(6);
       }
     }
   });
@@ -222,6 +230,7 @@ function create() {
   bullets = this.physics.add.group({
     defaultKey: "bullet_0",
     maxSize: 20,
+    runChildUpdate: true
   });
   enemy_bullets = this.physics.add.group({
     defaultKey: "bullet_0",
@@ -262,7 +271,6 @@ function create() {
       hit.y = bullet.y + 10;
       hit.play("bullet_hit");
       enemy_damage += 0.25;
-      console.log(enemy_damage);
     } else if (plane === player) {
       player_hit.x = bullet.x;
       player_hit.y = bullet.y + 10;
@@ -287,12 +295,20 @@ function update(time, delta) {
   const scene = this;
 
   cloud_0.setVelocityY(100);
-  cloud_1.setVelocityY(120);
-  if (cloud_0.y > 900) {
-    cloud_0.y = -100
+  cloud_1.setVelocityY(100);
+  cloud_upper_0.setVelocityY(200);
+  cloud_upper_1.setVelocityY(200);
+  if (cloud_0.y > 1200) {
+    cloud_0.y = -400
   }
-  if (cloud_1.y > 900) {
-    cloud_1.y = -100
+  if (cloud_1.y > 1200) {
+    cloud_1.y = -400
+  }
+  if (cloud_upper_0.y > 1200) {
+    cloud_upper_0.y = -400
+  }
+  if (cloud_upper_1.y > 1200) {
+    cloud_upper_1.y = -400
   }
 
   if (cursors.left.isDown) {
@@ -379,7 +395,7 @@ function update(time, delta) {
     if (player_damage > 100) {
       scene.scene.pause();
       player_damage = 0;
-      goverpic.setDepth(5);
+      goverpic.setDepth(6);
     }
 
     setTimeout(() => {
