@@ -18,7 +18,7 @@ var config = {
       debug: false, // Wizualizacja kolizji (ustaw true dla testów)
     },
   },
-  version: "1.3.0-dev",
+  version: "1.3.2-dev",
 };
 
 // ---------- GLOBAL VARIABLES ---------- //
@@ -48,20 +48,19 @@ let goverpic;
 let pausepic;
 let cloud_0;
 let cloud_1;
+let shootdownY = 0;
+let shootdowns = [];
 
 // ---------- PRELOAD FUNCTION ---------- //
 
 function preload() {
-
-  this.load.font('PressStart', 'assets/PressStart2P-Regular.ttf', 'truetype');
+  this.load.font("PressStart", "assets/PressStart2P-Regular.ttf", "truetype");
 
   this.load.image("stscreen", "assets/startingscreen.png");
-  this.load.spritesheet('enter_button', 'assets/enter_button.png',
-    {
-      frameWidth: 50,
-      frameHeight: 50
-    }
-  )
+  this.load.spritesheet("enter_button", "assets/enter_button.png", {
+    frameWidth: 50,
+    frameHeight: 50,
+  });
 
   this.load.image("bground", "assets/background.png");
   this.load.image("goverpic", "assets/game_over.png");
@@ -88,6 +87,8 @@ function preload() {
 
   this.load.image("hit", "assets/hit/hit_0.png");
   this.load.image("nohit", "assets/hit/hit_1.png");
+
+  this.load.image("gcross", "assets/gcross.png");
 }
 
 // ---------- CREATE FUNCTION ---------- //
@@ -99,16 +100,16 @@ function create() {
   startscreen = this.add.image(300, 400, "stscreen");
   startscreen.setDepth(6);
   this.anims.create({
-    key: 'enter-anim',
-    frames: this.anims.generateFrameNumbers('enter_button', {
+    key: "enter-anim",
+    frames: this.anims.generateFrameNumbers("enter_button", {
       start: 0,
       end: 3,
     }),
     frameRate: 8,
-    repeat: -1
+    repeat: -1,
   });
-  const enterButton = this.add.sprite(268, 415, 'enter-button');
-  enterButton.play('enter-anim');
+  const enterButton = this.add.sprite(268, 415, "enter-button");
+  enterButton.play("enter-anim");
   enterButton.setDepth(6);
 
   goverpic = this.add.image(300, 400, "goverpic");
@@ -116,14 +117,13 @@ function create() {
 
   cloud_0 = this.physics.add.sprite(300, 400, "cloud_0");
   cloud_1 = this.physics.add.sprite(300, 1200, "cloud_0");
-  cloud_upper_0 = this.physics.add.sprite(300, 400, "cloud_upper_0")
-  cloud_upper_1 = this.physics.add.sprite(300, 1200, "cloud_upper_0")
+  cloud_upper_0 = this.physics.add.sprite(300, 400, "cloud_upper_0");
+  cloud_upper_1 = this.physics.add.sprite(300, 1200, "cloud_upper_0");
   // cloud_upper_0 = this.physics.add.sprite()
   cloud_0.setDepth(2);
   cloud_1.setDepth(2);
   cloud_upper_0.setDepth(5);
   cloud_upper_1.setDepth(5);
-
 
   pausepic = this.add.image(300, 400, "pausepic");
   pausepic.setDepth(-1);
@@ -151,7 +151,7 @@ function create() {
     .text(10, 10, `Version: ${config.version}`, {
       fontSize: "14px",
       color: "#ffffff",
-      fontFamily: 'PressStart',
+      fontFamily: "PressStart",
     })
     .setDepth(3);
 
@@ -162,13 +162,13 @@ function create() {
   });
   damage_ind.setDepth(3);
 
-    document.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
       startscreen.setDepth(-1);
       enterButton.setDepth(-1);
       background.setDepth(0);
     }
-  })
+  });
 
   player = this.physics.add.sprite(300, 720, "player_frame0").setScale(1.5);
   player.setOrigin(0.5, 0.5);
@@ -233,7 +233,7 @@ function create() {
   bullets = this.physics.add.group({
     defaultKey: "bullet_0",
     maxSize: 20,
-    runChildUpdate: true
+    runChildUpdate: true,
   });
   enemy_bullets = this.physics.add.group({
     defaultKey: "bullet_0",
@@ -268,21 +268,25 @@ function create() {
   cursors = this.input.keyboard.createCursorKeys();
   enemy_dornier.setVelocityX(+enemy_dornier.speed);
 
+  /* -- Hitting function -- */
+
   function hitPlane(plane, bullet) {
     if (plane === enemy_dornier) {
       hit.x = bullet.x;
       hit.y = bullet.y + 10;
       hit.play("bullet_hit");
-      enemy_damage += 0.25;
+      //console.log(enemy_damage);
+      enemy_damage += 0.5;
     } else if (plane === player) {
       player_hit.x = bullet.x;
       player_hit.y = bullet.y + 10;
       player_hit.play("bullet_hit");
       damage_ind.setText(`Damage ${player_damage}%`);
-      player_damage += 1.75;
+      player_damage += 5.75;
     }
     bullet.setActive(false);
     bullet.setVisible(false);
+    bullet.destroy();
   }
 
   setInterval(() => {
@@ -297,22 +301,26 @@ function create() {
 function update(time, delta) {
   const scene = this;
 
+  /* -- Clouds Movement -- */
+
   cloud_0.setVelocityY(150);
   cloud_1.setVelocityY(150);
   cloud_upper_0.setVelocityY(200);
   cloud_upper_1.setVelocityY(200);
   if (cloud_0.y > 1200) {
-    cloud_0.y = -400
+    cloud_0.y = -400;
   }
   if (cloud_1.y > 1200) {
-    cloud_1.y = -400
+    cloud_1.y = -400;
   }
   if (cloud_upper_0.y > 1200) {
-    cloud_upper_0.y = -400
+    cloud_upper_0.y = -400;
   }
   if (cloud_upper_1.y > 1200) {
-    cloud_upper_1.y = -400
+    cloud_upper_1.y = -400;
   }
+
+  /* -- Player Movement -- */
 
   if (cursors.left.isDown) {
     player.setVelocityX(-player.speed);
@@ -325,6 +333,8 @@ function update(time, delta) {
 
   enemy_fire.x = enemy_dornier.x - 4;
   enemy_fire.y = enemy_dornier.y - 25;
+
+  /* -- Player Fire -- */
 
   if (cursors.space.isDown) {
     if (time > nextFire && temperature < 500) {
@@ -349,6 +359,8 @@ function update(time, delta) {
     }
   });
 
+  /* -- Enemy Movement -- */
+
   if (enemy_dornier.x > 500) {
     if (enemy_dornier.x > 400) {
     }
@@ -358,6 +370,8 @@ function update(time, delta) {
     }
     enemy_dornier.setVelocityX(+enemy_dornier.speed); // Move right
   }
+
+  /* -- Enemy Fire -- */
 
   if (time > enemyNextFire && burst < 6) {
     var enemy_bullet = enemy_bullets.get(
@@ -381,6 +395,8 @@ function update(time, delta) {
     }
   }
 
+  /* -- Inactivating Bullets -- */
+
   enemy_bullets.getChildren().forEach(function (enemy_bullet) {
     if (
       enemy_bullet.active &&
@@ -394,11 +410,23 @@ function update(time, delta) {
     }
   });
 
-  if (player_damage > 100 || enemy_damage > 200) {
+  /* -- Shootdown Player and Enemy -- */
+
+  if (player_damage > 100 || enemy_damage > 20) {
     if (player_damage > 100) {
       scene.scene.pause();
       player_damage = 0;
       goverpic.setDepth(6);
+      setTimeout(() => {
+        shootdowns.forEach(gcross => gcross.destroy());
+      }, 1500);
+    }
+    else if (enemy_damage > 20) {
+      scene.scene.pause();
+      shootdownY += 50;
+      let gcross = this.add.image(550, shootdownY, "gcross");
+      gcross.setDepth(5);
+      shootdowns.push(gcross);
     }
 
     setTimeout(() => {
@@ -438,12 +466,15 @@ function resetScene(scene) {
       bullet.setVisible(false);
     }
   });
-  enemy_bullets.getChildren().forEach(function (bullet) {
+  enemy_bullets.getChildren().forEach(bullet => {
     if (bullet.active) {
       bullet.setActive(false);
       bullet.setVisible(false);
+      if (bullet.body) {
+        //bullet.body.setVelocity(0, 0);
+        bullet.destroy();
+      }
     }
   });
-
   scene.scene.resume();
 }
