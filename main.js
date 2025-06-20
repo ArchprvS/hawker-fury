@@ -50,6 +50,7 @@ let cloud_0;
 let cloud_1;
 let shootdownY = 0;
 let shootdowns = [];
+let enemy_down = false;
 
 // ---------- PRELOAD FUNCTION ---------- //
 
@@ -84,6 +85,15 @@ function preload() {
   this.load.image("enemy_frame0", "assets/enemy_dornier/enemy_dornier0.png");
   this.load.image("enemy_frame1", "assets/enemy_dornier/enemy_dornier1.png");
   this.load.image("enemy_frame2", "assets/enemy_dornier/enemy_dornier2.png");
+
+  this.load.spritesheet(
+    "shootdown_do",
+    "assets/enemy_dornier/shootdown_do.png",
+    {
+      frameWidth: 95,
+      frameHeight: 75,
+    }
+  );
 
   this.load.image("hit", "assets/hit/hit_0.png");
   this.load.image("nohit", "assets/hit/hit_1.png");
@@ -226,6 +236,15 @@ function create() {
     frameRate: 24,
     repeat: -1,
   });
+  this.anims.create({
+    key: "dornier_down",
+    frames: this.anims.generateFrameNumbers("shootdown_do", {
+      start: 0,
+      end: 24,
+    }),
+    frameRate: 24,
+    repeat: 0,
+  });
 
   player.play("fly");
   enemy_dornier.play("enemy_fly");
@@ -276,7 +295,7 @@ function create() {
       hit.y = bullet.y + 10;
       hit.play("bullet_hit");
       //console.log(enemy_damage);
-      enemy_damage += 0.5;
+      enemy_damage += 5;
     } else if (plane === player) {
       player_hit.x = bullet.x;
       player_hit.y = bullet.y + 10;
@@ -379,7 +398,7 @@ function update(time, delta) {
       enemy_dornier.y - 15
     );
 
-    if (enemy_bullet) {
+    if (enemy_bullet && !enemy_down) {
       shoot(enemy_bullet);
       enemy_bullet.setAngle(180);
       enemy_bullet.setVelocityY(-bullet_speed);
@@ -418,20 +437,35 @@ function update(time, delta) {
       player_damage = 0;
       goverpic.setDepth(6);
       setTimeout(() => {
-        shootdowns.forEach(gcross => gcross.destroy());
+        shootdowns.forEach((gcross) => gcross.destroy());
+      }, 1500);
+      setTimeout(() => {
+        resetScene(scene);
       }, 1500);
     }
-    else if (enemy_damage > 20) {
-      scene.scene.pause();
-      shootdownY += 50;
-      let gcross = this.add.image(550, shootdownY, "gcross");
-      gcross.setDepth(5);
-      shootdowns.push(gcross);
-    }
-
+  }
+  if (enemy_damage > 20) {
+    enemy_dornier.anims.stop();
+    enemy_down = true;
+    enemy_damage = 0;
+    enemy_dornier.play("dornier_down");
+    shootdownY += 50;
+    let gcross = this.add.image(550, shootdownY, "gcross");
+    gcross.setDepth(5);
+    shootdowns.push(gcross);
     setTimeout(() => {
-      resetScene(scene);
-    }, 1500);
+      enemy_dornier.setVisible(false);
+      enemy_dornier.setActive(false);
+      setTimeout(() => {
+        enemy_dornier.x = 300;
+        enemy_dornier.y = 220;
+        enemy_dornier.setVelocityX(+enemy_dornier.speed);
+        enemy_dornier.setVisible(true);
+        enemy_dornier.setActive(true);
+        enemy_dornier.play("enemy_fly");
+        enemy_down = false;
+      }, 2000)
+    }, 1000);
   }
 }
 
@@ -466,7 +500,7 @@ function resetScene(scene) {
       bullet.setVisible(false);
     }
   });
-  enemy_bullets.getChildren().forEach(bullet => {
+  enemy_bullets.getChildren().forEach((bullet) => {
     if (bullet.active) {
       bullet.setActive(false);
       bullet.setVisible(false);
